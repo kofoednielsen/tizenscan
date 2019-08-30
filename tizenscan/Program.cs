@@ -43,7 +43,7 @@ namespace tizenscan
 
             var list = data.Split(new char[0]).Where(s => s != string.Empty).ToList();
             var macsToCheck = new List<MacIp>();
-            for(int i = 9; i < list.Count()-5; i+=2)
+            for(int i = 9; i < list.Count()-5; i++)
             {
                 if (list[i].StartsWith("192.168.8"))
                 {
