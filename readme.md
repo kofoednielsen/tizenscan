@@ -1,12 +1,10 @@
 # tizenscan
 A tool for finding tizen devices on your network, so you can sdb to the device easily
 
-As of right now, the ip of the tizen device must start with 192.168.8
-
 ## usage
 ```bash
 C:\Users\JohnDoe>tizenscan
-Tizen devices:
+Samsung devices:
 192.168.8.133
 ```
 
@@ -16,5 +14,5 @@ Enjoy!
 
 ## how it works
 the tools uses `arp -a` to find accessable endpoints and their mac addresses. 
-Then it performs a lookup with api.macaddress.io, and checks if the mac address belongs to samsung
+Then it performs a lookup, with a mac/vendor map, and checks if the mac address belongs to samsung
 if it does, the ip is printed to the terminal

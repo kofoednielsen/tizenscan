@@ -22,8 +22,21 @@ namespace tizenscan
                 Ip = ip;
             }
         }
+        private static Dictionary<string, string> macVendorsMap = new Dictionary<string, string>();
         static void Main(string[] args)
         {
+            using (var reader = new StreamReader(File.OpenRead("vendors.txt")))
+            {
+                var line = "";
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var values = line.Split("\t");
+                    var mac = values[0];
+                    var vendorName = values[1];
+                    macVendorsMap.Add(mac, vendorName);
+                }
+            }
+
             Process cmd = new Process();
             cmd.StartInfo.FileName = "cmd.exe";
             cmd.StartInfo.RedirectStandardInput = true;
@@ -40,51 +53,34 @@ namespace tizenscan
             {
                 data = reader.ReadToEnd();
             }
-
-            var list = data.Split(new char[0]).Where(s => s != string.Empty).ToList();
+            var lines = data.Split('\n');
+            //Get all strings that are a mac address ie. contains 5 dashes
+            var maclines = lines.Where(s => s.Count(c => c == '-') == 5).ToList();
             var macsToCheck = new List<MacIp>();
-            for(int i = 9; i < list.Count()-5; i++)
+            foreach(var line in maclines)
             {
-                if (list[i].StartsWith("192.168.8"))
-                {
-                    macsToCheck.Add(new MacIp(list[i + 1], list[i]));
-                }
+                var values = line.Split().Select(s => s.Trim()).Where(s => s != string.Empty).ToArray();
+                var ip = values[0];
+                var mac = values[1].Replace("-", "").ToUpper();
+                macsToCheck.Add(new MacIp(mac, ip));
             }
-            var tasks = macsToCheck.Select(m => isSamsung(m)).ToArray();
-            Task.WaitAll(tasks);
+            var samsungMacs = macsToCheck.Where(m => isSamsung(m)).ToList();
 
-            Console.WriteLine("Tizen devices: ");
-            tasks.ToList().Where(t => t.Result != null).ToList().ForEach(t => Console.WriteLine(t.Result.Ip));
+            Console.WriteLine("Samsung devices: ");
+            samsungMacs.ForEach(t => Console.WriteLine(t.Ip));
         }
-        private static async Task<MacIp> isSamsung(MacIp macIp)
+        private static bool isSamsung(MacIp macIp)
         {
-            try
-            {
-                var url = "https://api.macaddress.io/v1?apiKey=at_RCbN6BIjzLTiNzrD0VhthrFfvKOtw&output=json&search=" + macIp.Mac;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-                using (HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync())
-                using (Stream stream = response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    var data = await reader.ReadToEndAsync();
-                    var jsonObject = JObject.Parse(data);
-                    var companyName = (string)jsonObject["vendorDetails"]["companyName"];
-                    if (companyName.Contains("Samsung"))
-                    {
-                        return macIp;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                return null;
-            }
+            string vendor = "";
+            string macVendor = macIp.Mac.Substring(0, 6);
+            var res = macVendorsMap.TryGetValue(macVendor, out vendor);
+            if (res)
+                if (vendor.Contains("Samsung"))
+                    return true;
+                else
+                    return false;
+            else
+                return false;
         }
     }
 }
