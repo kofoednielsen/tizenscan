@@ -14,7 +14,7 @@ namespace tizenscan
     {
         static void Main(string[] args)
         {
-            var timeout = 200;
+            var timeout = 500;
             if (args.Count() > 0)
                 int.TryParse(args[0], out timeout);
             var localIP = GetDefaultGateway();
