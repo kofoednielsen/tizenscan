@@ -46,6 +46,7 @@ namespace tizenscan
                 .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
                 .Select(g => g?.Address)
                 .Where(a => a != null)
+                .Where(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .FirstOrDefault();
         }
         public static async Task TryConnect(TcpClient client, string ip)
